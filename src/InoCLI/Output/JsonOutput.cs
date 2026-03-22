@@ -3,11 +3,11 @@ using System.Text.Json;
 
 namespace InoCLI
 {
-   // ============================================================
+   // ===================================================================
    /// <summary>
-   /// Writes JSON to stdout with optional pretty-printing.
+   /// Writes JSON to stdout or stderr with optional pretty-printing.
    /// </summary>
-   // ============================================================
+   // ===================================================================
    public static class JsonOutput
    {
 
@@ -26,6 +26,38 @@ namespace InoCLI
          }
 
          Console.WriteLine(json);
+      }
+
+      // ------------------------------------------------------------
+      /// <summary>
+      /// Writes JSON to stderr, optionally pretty-printed.
+      /// </summary>
+      // ------------------------------------------------------------
+      public static void WriteError(string json, bool pretty = false)
+      {
+         if (pretty)
+         {
+            json = Prettify(json);
+         }
+
+         Console.Error.WriteLine(json);
+      }
+
+      // ------------------------------------------------------------
+      /// <summary>
+      /// Writes a CliResponse to the appropriate stream.
+      /// </summary>
+      // ------------------------------------------------------------
+      public static void Write(CliResponse response, bool pretty = false)
+      {
+         if (response.Success)
+         {
+            Write(response.RawJson, pretty);
+         }
+         else
+         {
+            WriteError(response.RawJson, pretty);
+         }
       }
 
       // ------------------------------------------------------------

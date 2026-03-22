@@ -38,9 +38,9 @@ InoCLI/
 │   ├── Schema/         ← CliSchema, GroupSchema, CommandSchema, ...
 │   ├── Output/         ← JsonOutput, HelpFormatter
 │   ├── Models/         ← CliRequest, CliResponse
-│   ├── Utils/          ← StdinReader
+│   ├── Utils/          ← StdinReader, JsonHelper
 │   ├── Client/         ← CliClient (재시도 포함 전송)
-│   ├── Transport/      ← ITransport, TcpTransport, UnixSocketTransport
+│   ├── Transport/      ← ITransport, TcpTransport, UnixSocketTransport, MemoryTransport
 │   └── Protocol/       ← FrameProtocol (길이 접두사 프레임)
 └── tests/InoCLI.Tests/
 ```
@@ -147,10 +147,43 @@ myapp eval cs code --using System --using UnityEngine
 - `ForGroup(schema, group)` — 그룹 내 커맨드 목록
 - `ForCommand(schema, group, command)` — 인자와 옵션 상세
 
+### CliResponse
+
+서버 응답을 파싱하거나, 클라이언트 측 JSON 응답을 생성합니다.
+
+```csharp
+// 서버 응답 파싱
+var response = CliResponse.Parse(serverJson);
+
+// 응답 생성
+CliResponse.Ok("Connected");
+// → {"success":true,"message":"Connected"}
+
+CliResponse.Result("version", "0.1.0");
+// → {"success":true,"version":"0.1.0"}
+
+CliResponse.Error("TIMEOUT", "Timed out");
+// → {"success":false,"error":{"code":"TIMEOUT","message":"Timed out"}}
+
+CliResponse.Error("TIMEOUT", "Timed out", new Dictionary<string, object> { ["elapsed"] = 5000 });
+// → {"success":false,"error":{"code":"TIMEOUT","message":"Timed out","elapsed":5000}}
+```
+
 ### JsonOutput
 
 - `Write(json, pretty)` — stdout 출력 (선택적 포맷팅)
+- `WriteError(json, pretty)` — stderr 출력 (선택적 포맷팅)
+- `Write(CliResponse, pretty)` — 자동 분기: 성공 → stdout, 에러 → stderr
 - `Prettify(json)` — JSON 들여쓰기 재포맷
+
+### JsonHelper
+
+`JsonElement`에서 타입별 값을 추출합니다. 문자열/숫자 표현 모두 처리.
+
+- `GetInt(element, fallback)` — `42` 또는 `"42"` → `int`
+- `GetLong(element, fallback)` — `42` 또는 `"42"` → `long`
+- `GetString(element, fallback)` — 문자열 추출 (폴백 지원)
+- `GetBool(element, fallback)` — `true`, `"true"`, `1` → `bool`
 
 ### StdinReader
 
@@ -168,6 +201,7 @@ cat script.cs | myapp eval cs -
 |--------|----------|------|
 | `TcpTransport` | TCP (127.0.0.1) | 원격 서버 연결 |
 | `UnixSocketTransport` | Unix Domain Socket | 로컬 데몬 프로세스 |
+| `MemoryTransport` | 인메모리 버퍼 | 테스트 |
 
 프레임 포맷: `[4바이트 BE uint32 길이][UTF-8 바디]`
 

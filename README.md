@@ -38,9 +38,9 @@ InoCLI/
 │   ├── Schema/         ← CliSchema, GroupSchema, CommandSchema, ...
 │   ├── Output/         ← JsonOutput, HelpFormatter
 │   ├── Models/         ← CliRequest, CliResponse
-│   ├── Utils/          ← StdinReader
+│   ├── Utils/          ← StdinReader, JsonHelper
 │   ├── Client/         ← CliClient (send with retry)
-│   ├── Transport/      ← ITransport, TcpTransport, UnixSocketTransport
+│   ├── Transport/      ← ITransport, TcpTransport, UnixSocketTransport, MemoryTransport
 │   └── Protocol/       ← FrameProtocol (length-prefixed frames)
 └── tests/InoCLI.Tests/
 ```
@@ -147,10 +147,43 @@ Generates help text from schema at three levels:
 - `ForGroup(schema, group)` — list commands in a group
 - `ForCommand(schema, group, command)` — show args and options
 
+### CliResponse
+
+Parses server responses and builds client-side JSON responses.
+
+```csharp
+// Parse server response
+var response = CliResponse.Parse(serverJson);
+
+// Build responses
+CliResponse.Ok("Connected");
+// → {"success":true,"message":"Connected"}
+
+CliResponse.Result("version", "0.1.0");
+// → {"success":true,"version":"0.1.0"}
+
+CliResponse.Error("TIMEOUT", "Timed out");
+// → {"success":false,"error":{"code":"TIMEOUT","message":"Timed out"}}
+
+CliResponse.Error("TIMEOUT", "Timed out", new Dictionary<string, object> { ["elapsed"] = 5000 });
+// → {"success":false,"error":{"code":"TIMEOUT","message":"Timed out","elapsed":5000}}
+```
+
 ### JsonOutput
 
 - `Write(json, pretty)` — stdout with optional pretty-print
+- `WriteError(json, pretty)` — stderr with optional pretty-print
+- `Write(CliResponse, pretty)` — auto-routes: success → stdout, error → stderr
 - `Prettify(json)` — re-format JSON with indentation
+
+### JsonHelper
+
+Extracts typed values from `JsonElement`, handling both string and number representations.
+
+- `GetInt(element, fallback)` — `42` or `"42"` → `int`
+- `GetLong(element, fallback)` — `42` or `"42"` → `long`
+- `GetString(element, fallback)` — string extraction with fallback
+- `GetBool(element, fallback)` — `true`, `"true"`, `1` → `bool`
 
 ### StdinReader
 
@@ -168,6 +201,7 @@ For client-server CLIs that communicate over length-prefixed JSON frames.
 |-------|----------|----------|
 | `TcpTransport` | TCP (127.0.0.1) | Remote server connection |
 | `UnixSocketTransport` | Unix Domain Socket | Local daemon processes |
+| `MemoryTransport` | In-memory buffer | Testing |
 
 Frame format: `[4-byte BE uint32 length][UTF-8 body]`
 
