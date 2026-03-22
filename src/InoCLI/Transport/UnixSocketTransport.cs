@@ -29,11 +29,28 @@ namespace InoCLI
 
    #endregion
 
-   #region Constructor
+   #region Constructors
 
+      // ------------------------------------------------------------
+      /// <summary>
+      /// Creates a transport that will connect to a socket path.
+      /// </summary>
+      // ------------------------------------------------------------
       public UnixSocketTransport(string socketPath)
       {
          this.socketPath = socketPath;
+      }
+
+      // ----------------------------------------------------------------------
+      /// <summary>
+      /// <br/> Wraps an already-connected socket (e.g. from server Accept).
+      /// <br/> Connect() becomes a no-op.
+      /// </summary>
+      // ----------------------------------------------------------------------
+      public UnixSocketTransport(Socket acceptedSocket)
+      {
+         this.socketPath = null;
+         this.socket     = acceptedSocket;
       }
 
    #endregion
