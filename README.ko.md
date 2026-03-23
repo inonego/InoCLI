@@ -20,9 +20,8 @@
 
 ```
 InoCLI/
-├── src/InoCLI/
-│   └── Parsing/     ArgParser, ParsedArgs
-└── tests/InoCLI.Tests/
+├── src/             ArgParser, ParsedArgs
+└── test/            TEST_ArgParser
 ```
 
 ## 설치

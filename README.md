@@ -20,9 +20,8 @@ Lightweight CLI argument parser for .NET. Splits `string[] args` into **position
 
 ```
 InoCLI/
-├── src/InoCLI/
-│   └── Parsing/     ArgParser, ParsedArgs
-└── tests/InoCLI.Tests/
+├── src/             ArgParser, ParsedArgs
+└── test/            TEST_ArgParser
 ```
 
 ## Installation

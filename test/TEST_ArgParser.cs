@@ -6,7 +6,7 @@ using Xunit;
 
 using InoCLI;
 
-namespace InoCLI.Tests
+namespace InoCLI.TEST
 {
    // ============================================================
    /// <summary>
