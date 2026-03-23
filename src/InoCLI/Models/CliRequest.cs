@@ -1,13 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.Json;
 
 namespace InoCLI
 {
    // ============================================================
    /// <summary>
-   /// JSON-RPC style request: {group, command, args[], options{}}.
+   /// JSON request: {positionals[], optionals{}}.
    /// </summary>
    // ============================================================
    public class CliRequest
@@ -15,10 +16,8 @@ namespace InoCLI
 
    #region Fields
 
-      public string                    Group      { get; set; }
-      public string                    Command    { get; set; }
-      public List<string>              Args       { get; set; } = new List<string>();
-      public Dictionary<string, object> Options   { get; set; } = new Dictionary<string, object>();
+      public List<string>                       Positionals { get; set; } = new List<string>();
+      public Dictionary<string, List<string>>   Optionals     { get; set; } = new Dictionary<string, List<string>>();
 
    #endregion
 
@@ -33,10 +32,8 @@ namespace InoCLI
       {
          return new CliRequest
          {
-            Group   = parsed.Group,
-            Command = parsed.Command,
-            Args    = parsed.Positional,
-            Options = parsed.Options
+            Positionals = parsed.Positionals,
+            Optionals     = parsed.Optionals
          };
       }
 
@@ -51,24 +48,16 @@ namespace InoCLI
       // ------------------------------------------------------------
       public string ToJson()
       {
-         var dict = new Dictionary<string, object>
-         {
-            ["group"] = Group
-         };
+         var dict = new Dictionary<string, object>();
 
-         if (!string.IsNullOrEmpty(Command))
+         if (Positionals.Count > 0)
          {
-            dict["command"] = Command;
+            dict["positionals"] = Positionals;
          }
 
-         if (Args.Count > 0)
+         if (Optionals.Count > 0)
          {
-            dict["args"] = Args;
-         }
-
-         if (Options.Count > 0)
-         {
-            dict["options"] = Options;
+            dict["optionals"] = Optionals;
          }
 
          return JsonSerializer.Serialize(dict);

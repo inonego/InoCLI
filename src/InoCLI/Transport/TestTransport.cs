@@ -9,7 +9,7 @@ namespace InoCLI
    /// In-memory ITransport for testing. Stores frames in a buffer.
    /// </summary>
    // ==================================================================
-   public class MemoryTransport : ITransport
+   public class TestTransport : ITransport
    {
 
    #region Fields

@@ -20,7 +20,7 @@ namespace InoCLI.Tests
       [Fact]
       public void SendReceive_RoundTrip()
       {
-         var transport = new MemoryTransport();
+         var transport = new TestTransport();
 
          FrameProtocol.Send(transport, "{\"group\":\"ping\"}");
 
@@ -32,7 +32,7 @@ namespace InoCLI.Tests
       [Fact]
       public void SendReceive_Unicode()
       {
-         var transport = new MemoryTransport();
+         var transport = new TestTransport();
          string input  = "{\"message\":\"한글 테스트 🎉\"}";
 
          FrameProtocol.Send(transport, input);
@@ -45,7 +45,7 @@ namespace InoCLI.Tests
       [Fact]
       public void SendReceive_EmptyBody()
       {
-         var transport = new MemoryTransport();
+         var transport = new TestTransport();
 
          FrameProtocol.Send(transport, "");
 
@@ -57,7 +57,7 @@ namespace InoCLI.Tests
       [Fact]
       public void SendReceive_LargePayload()
       {
-         var transport = new MemoryTransport();
+         var transport = new TestTransport();
          string input  = new string('x', 100_000);
 
          FrameProtocol.Send(transport, input);
@@ -69,7 +69,7 @@ namespace InoCLI.Tests
 
    #endregion
 
-   // Uses InoCLI.MemoryTransport from Transport/MemoryTransport.cs
+   // Uses InoCLI.TestTransport from Transport/TestTransport.cs
 
    }
 }

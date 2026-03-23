@@ -7,7 +7,7 @@ namespace InoCLI
 {
    // ============================================================
    /// <summary>
-   /// Replaces "-" in positional arguments with stdin content.
+   /// Replaces "-" in positionals arguments with stdin content.
    /// POSIX convention for piped input.
    /// </summary>
    // ============================================================
@@ -32,16 +32,16 @@ namespace InoCLI
       /// <br/> Returns null on success, or an error message on failure.
       /// </summary>
       // ----------------------------------------------------------------------
-      public static string ReadAll(List<string> positional)
+      public static string ReadAll(List<string> positionals)
       {
-         int dashCount = positional.Count(a => a == "-");
+         int dashCount = positionals.Count(a => a == "-");
 
          if (dashCount > 1)
          {
             return "Only one '-' (stdin) argument allowed.";
          }
 
-         int dashIndex = positional.IndexOf("-");
+         int dashIndex = positionals.IndexOf("-");
 
          if (dashIndex < 0)
          {
@@ -60,7 +60,8 @@ namespace InoCLI
             return "No input from stdin.";
          }
 
-         positional[dashIndex] = stdin;
+         positionals[dashIndex] = stdin;
+         
          return null;
       }
 
