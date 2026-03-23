@@ -5,7 +5,7 @@
   </p>
   <p align="center">
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-    <img src="https://img.shields.io/badge/.NET-8.0-purple?logo=dotnet" alt=".NET 8.0">
+    <img src="https://img.shields.io/badge/.NET-8.0%20%7C%20Standard%202.1-purple?logo=dotnet" alt=".NET 8.0 | Standard 2.1">
   </p>
   <p align="center">
     <b>English</b> | <a href="README.ko.md">한국어</a>
@@ -21,8 +21,7 @@ Lightweight CLI argument parser for .NET. Splits `string[] args` into **position
 ```
 InoCLI/
 ├── src/InoCLI/
-│   ├── Parsing/     ArgParser, ParsedArgs
-│   └── Json/        JsonHelper (read/write JSON utilities)
+│   └── Parsing/     ArgParser, ParsedArgs
 └── tests/InoCLI.Tests/
 ```
 
@@ -108,26 +107,14 @@ myapp -f               # short flag
 
 `-42` (negative number) is treated as a positional, not an option.
 
-## JsonHelper
+## Compatibility
 
-JSON read/write utilities.
+| Target | Version |
+|--------|---------|
+| .NET | 8.0+ |
+| .NET Standard | 2.1 (Unity 2021+) |
 
-### Read (from JsonElement)
-
-```csharp
-JsonHelper.GetInt(element, fallback)      // number or "42" → int
-JsonHelper.GetFloat(element, fallback)    // number or "1.5" → float
-JsonHelper.GetString(element, fallback)   // string extraction
-JsonHelper.GetBool(element, fallback)     // true, "true", 1 → bool
-```
-
-### Write (to console)
-
-```csharp
-JsonHelper.Write(json, pretty);           // stdout
-JsonHelper.WriteError(json, pretty);      // stderr
-JsonHelper.Prettify(json);                // re-format with indentation
-```
+No external dependencies. Pure `System` namespace only.
 
 ## License
 

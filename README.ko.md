@@ -5,7 +5,7 @@
   </p>
   <p align="center">
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-    <img src="https://img.shields.io/badge/.NET-8.0-purple?logo=dotnet" alt=".NET 8.0">
+    <img src="https://img.shields.io/badge/.NET-8.0%20%7C%20Standard%202.1-purple?logo=dotnet" alt=".NET 8.0 | Standard 2.1">
   </p>
   <p align="center">
     <a href="README.md">English</a> | <b>한국어</b>
@@ -21,8 +21,7 @@
 ```
 InoCLI/
 ├── src/InoCLI/
-│   ├── Parsing/     ArgParser, ParsedArgs
-│   └── Json/        JsonHelper (JSON 읽기/쓰기 유틸)
+│   └── Parsing/     ArgParser, ParsedArgs
 └── tests/InoCLI.Tests/
 ```
 
@@ -108,26 +107,14 @@ myapp -f               # 단축 플래그
 
 `-42` (음수)는 옵션이 아닌 위치 인자로 처리됩니다.
 
-## JsonHelper
+## 호환성
 
-JSON 읽기/쓰기 유틸리티.
+| 타겟 | 버전 |
+|------|------|
+| .NET | 8.0+ |
+| .NET Standard | 2.1 (Unity 2021+) |
 
-### 읽기 (JsonElement에서)
-
-```csharp
-JsonHelper.GetInt(element, fallback)      // 숫자 또는 "42" → int
-JsonHelper.GetFloat(element, fallback)    // 숫자 또는 "1.5" → float
-JsonHelper.GetString(element, fallback)   // 문자열 추출
-JsonHelper.GetBool(element, fallback)     // true, "true", 1 → bool
-```
-
-### 쓰기 (콘솔에)
-
-```csharp
-JsonHelper.Write(json, pretty);           // stdout
-JsonHelper.WriteError(json, pretty);      // stderr
-JsonHelper.Prettify(json);                // 들여쓰기 포맷팅
-```
+외부 의존성 없음. 순수 `System` 네임스페이스만 사용.
 
 ## 라이선스
 
