@@ -28,38 +28,15 @@ namespace InoCLI
          {
             string arg = args[i];
 
-            // Long option: --key or --key value
-            if (arg.StartsWith("--"))
+            if (TryParseOptional(arg, out string key))
             {
-               string key = arg.Substring(2);
-
-               if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
-               {
-                  AddOptional(result.Optionals, key, args[++i]);
-               }
-               else
-               {
-                  EnsureOptional(result.Optionals, key);
-               }
+               ParseOptionalValue(result.Optionals, key, args, ref i);
             }
-            // Short option: -k or -k value
-            else if (arg.StartsWith("-") && arg.Length > 1 && !char.IsDigit(arg[1]))
-            {
-               string key = arg.Substring(1);
-
-               if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
-               {
-                  AddOptional(result.Optionals, key, args[++i]);
-               }
-               else
-               {
-                  EnsureOptional(result.Optionals, key);
-               }
-            }
-            // Positional
             else
             {
-               result.Positionals.Add(arg);
+               var positional = ResolvePositional(arg);
+
+               result.Positionals.Add(positional);
             }
          }
 
@@ -70,32 +47,68 @@ namespace InoCLI
 
    #region Helpers
 
-      // ------------------------------------------------------------
+      // ---------------------------------------------------------------------------------
       /// <summary>
-      /// Adds a value to an optional key, creating the list if needed.
+      /// Extracts key from -short or --long format. Returns false if not an optional.
       /// </summary>
-      // ------------------------------------------------------------
-      private void AddOptional(Dictionary<string, List<string>> optionals, string key, string value)
+      // ---------------------------------------------------------------------------------
+      private bool TryParseOptional(string arg, out string key)
       {
-         if (!optionals.ContainsKey(key))
+         if (arg.StartsWith("--"))
          {
-            optionals[key] = new List<string>();
+            key = arg.Substring(2);
+            return true;
          }
 
-         optionals[key].Add(value);
+         if (arg.StartsWith("-") && arg.Length > 1 && !char.IsDigit(arg[1]))
+         {
+            key = arg.Substring(1);
+            return true;
+         }
+
+         key = null;
+
+         return false;
+      }
+
+      // -------------------------------------------------------------------
+      /// <summary>
+      /// Reads the optional value if present, otherwise marks as flag.
+      /// </summary>
+      // -------------------------------------------------------------------
+      private void ParseOptionalValue(Dictionary<string, List<string>> optionals, string key, string[] args, ref int i)
+      {
+         if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+         {
+            if (!optionals.ContainsKey(key))
+            {
+               optionals[key] = new List<string>();
+            }
+
+            optionals[key].Add(args[++i]);
+         }
+         else
+         {
+            if (!optionals.ContainsKey(key))
+            {
+               optionals[key] = new List<string>();
+            }
+         }
       }
 
       // ------------------------------------------------------------
       /// <summary>
-      /// Ensures an optional key exists (flag with no value).
+      /// Resolves a positional value. Substitutes "-" with stdin.
       /// </summary>
       // ------------------------------------------------------------
-      private void EnsureOptional(Dictionary<string, List<string>> optionals, string key)
+      private string ResolvePositional(string arg)
       {
-         if (!optionals.ContainsKey(key))
+         if (arg == "-" && Console.IsInputRedirected)
          {
-            optionals[key] = new List<string>();
+            return Console.In.ReadToEnd().Trim();
          }
+
+         return arg;
       }
 
    #endregion
