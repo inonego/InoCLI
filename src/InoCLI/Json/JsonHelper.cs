@@ -1,18 +1,20 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 using System.Text.Json;
 
 namespace InoCLI
 {
    // ============================================================
    /// <summary>
-   /// Helper methods for extracting typed values from JsonElement.
-   /// Handles both string and number representations.
+   /// JSON read/write utilities.
    /// </summary>
    // ============================================================
    public static class JsonHelper
    {
 
-   #region Int
+   #region Read — Int
 
       // ----------------------------------------------------------------------
       /// <summary>
@@ -27,9 +29,12 @@ namespace InoCLI
             return element.GetInt32();
          }
 
-         if (element.ValueKind == JsonValueKind.String && int.TryParse(element.GetString(), out int val))
+         if (element.ValueKind == JsonValueKind.String)
          {
-            return val;
+            if (int.TryParse(element.GetString(), out int val))
+            {
+               return val;
+            }
          }
 
          return fallback;
@@ -37,24 +42,27 @@ namespace InoCLI
 
    #endregion
 
-   #region Long
+   #region Read — Float
 
       // ----------------------------------------------------------------------
       /// <summary>
-      /// <br/> Extracts a long from a JsonElement.
+      /// <br/> Extracts a float from a JsonElement.
       /// <br/> Handles both number and string representations.
       /// </summary>
       // ----------------------------------------------------------------------
-      public static long GetLong(JsonElement element, long fallback = 0)
+      public static float GetFloat(JsonElement element, float fallback = 0f)
       {
          if (element.ValueKind == JsonValueKind.Number)
          {
-            return element.GetInt64();
+            return element.GetSingle();
          }
 
-         if (element.ValueKind == JsonValueKind.String && long.TryParse(element.GetString(), out long val))
+         if (element.ValueKind == JsonValueKind.String)
          {
-            return val;
+            if (float.TryParse(element.GetString(), out float val))
+            {
+               return val;
+            }
          }
 
          return fallback;
@@ -62,7 +70,7 @@ namespace InoCLI
 
    #endregion
 
-   #region String
+   #region Read — String
 
       // ------------------------------------------------------------
       /// <summary>
@@ -81,7 +89,7 @@ namespace InoCLI
 
    #endregion
 
-   #region Bool
+   #region Read — Bool
 
       // ----------------------------------------------------------------------
       /// <summary>
@@ -101,9 +109,12 @@ namespace InoCLI
             return false;
          }
 
-         if (element.ValueKind == JsonValueKind.String && bool.TryParse(element.GetString(), out bool val))
+         if (element.ValueKind == JsonValueKind.String)
          {
-            return val;
+            if (bool.TryParse(element.GetString(), out bool val))
+            {
+               return val;
+            }
          }
 
          if (element.ValueKind == JsonValueKind.Number)
@@ -112,6 +123,54 @@ namespace InoCLI
          }
 
          return fallback;
+      }
+
+   #endregion
+
+   #region Write
+
+      private static readonly JsonSerializerOptions PrettyOptions = new() { WriteIndented = true };
+
+      // ------------------------------------------------------------
+      /// <summary>
+      /// Writes JSON to stdout, optionally pretty-printed.
+      /// </summary>
+      // ------------------------------------------------------------
+      public static void Write(string json, bool pretty = false)
+      {
+         if (pretty)
+         {
+            json = Prettify(json);
+         }
+
+         Console.WriteLine(json);
+      }
+
+      // ------------------------------------------------------------
+      /// <summary>
+      /// Writes JSON to stderr, optionally pretty-printed.
+      /// </summary>
+      // ------------------------------------------------------------
+      public static void WriteError(string json, bool pretty = false)
+      {
+         if (pretty)
+         {
+            json = Prettify(json);
+         }
+
+         Console.Error.WriteLine(json);
+      }
+
+      // ------------------------------------------------------------
+      /// <summary>
+      /// Re-formats a JSON string with indentation.
+      /// </summary>
+      // ------------------------------------------------------------
+      public static string Prettify(string json)
+      {
+         var doc = JsonDocument.Parse(json);
+
+         return JsonSerializer.Serialize(doc, PrettyOptions);
       }
 
    #endregion

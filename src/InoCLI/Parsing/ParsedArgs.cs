@@ -54,10 +54,10 @@ namespace InoCLI
       // ------------------------------------------------------------
       public int GetInt(int index)
       {
-         var s = this[index] ?? throw new CliException($"Missing positional at index {index}");
+         var s = this[index] ?? throw new ArgumentException($"Missing positional at index {index}");
          if (!int.TryParse(s, out int v))
          {
-            throw new CliException($"Invalid int at index {index}: {s}");
+            throw new ArgumentException($"Invalid int at index {index}: {s}");
          }
          return v;
       }
@@ -69,10 +69,10 @@ namespace InoCLI
       // ------------------------------------------------------------
       public float GetFloat(int index)
       {
-         var s = this[index] ?? throw new CliException($"Missing positional at index {index}");
+         var s = this[index] ?? throw new ArgumentException($"Missing positional at index {index}");
          if (!float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v))
          {
-            throw new CliException($"Invalid float at index {index}: {s}");
+            throw new ArgumentException($"Invalid float at index {index}: {s}");
          }
          return v;
       }
@@ -84,10 +84,10 @@ namespace InoCLI
       // ------------------------------------------------------------
       public bool GetBool(int index)
       {
-         var s = this[index] ?? throw new CliException($"Missing positional at index {index}");
+         var s = this[index] ?? throw new ArgumentException($"Missing positional at index {index}");
          if (!bool.TryParse(s, out bool v))
          {
-            throw new CliException($"Invalid bool at index {index}: {s}");
+            throw new ArgumentException($"Invalid bool at index {index}: {s}");
          }
          return v;
       }
@@ -117,10 +117,10 @@ namespace InoCLI
       // ------------------------------------------------------------
       public int GetInt(string key)
       {
-         var s = this[key] ?? throw new CliException($"Missing option: --{key}");
+         var s = this[key] ?? throw new ArgumentException($"Missing option: --{key}");
          if (!int.TryParse(s, out int v))
          {
-            throw new CliException($"Invalid int for --{key}: {s}");
+            throw new ArgumentException($"Invalid int for --{key}: {s}");
          }
          return v;
       }
@@ -132,10 +132,10 @@ namespace InoCLI
       // ------------------------------------------------------------
       public float GetFloat(string key)
       {
-         var s = this[key] ?? throw new CliException($"Missing option: --{key}");
+         var s = this[key] ?? throw new ArgumentException($"Missing option: --{key}");
          if (!float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v))
          {
-            throw new CliException($"Invalid float for --{key}: {s}");
+            throw new ArgumentException($"Invalid float for --{key}: {s}");
          }
          return v;
       }
@@ -147,10 +147,10 @@ namespace InoCLI
       // ------------------------------------------------------------
       public bool GetBool(string key)
       {
-         var s = this[key] ?? throw new CliException($"Missing option: --{key}");
+         var s = this[key] ?? throw new ArgumentException($"Missing option: --{key}");
          if (!bool.TryParse(s, out bool v))
          {
-            throw new CliException($"Invalid bool for --{key}: {s}");
+            throw new ArgumentException($"Invalid bool for --{key}: {s}");
          }
          return v;
       }
@@ -164,7 +164,7 @@ namespace InoCLI
       {
          if (!Optionals.TryGetValue(key, out var v))
          {
-            throw new CliException($"Missing option: --{key}");
+            throw new ArgumentException($"Missing option: --{key}");
          }
          return v;
       }
@@ -181,7 +181,7 @@ namespace InoCLI
          {
             if (!int.TryParse(s, out int v))
             {
-               throw new CliException($"Invalid int for --{key}: {s}");
+               throw new ArgumentException($"Invalid int for --{key}: {s}");
             }
             result.Add(v);
          }
@@ -200,7 +200,7 @@ namespace InoCLI
          {
             if (!float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v))
             {
-               throw new CliException($"Invalid float for --{key}: {s}");
+               throw new ArgumentException($"Invalid float for --{key}: {s}");
             }
             result.Add(v);
          }
@@ -219,7 +219,7 @@ namespace InoCLI
          {
             if (!bool.TryParse(s, out bool v))
             {
-               throw new CliException($"Invalid bool for --{key}: {s}");
+               throw new ArgumentException($"Invalid bool for --{key}: {s}");
             }
             result.Add(v);
          }

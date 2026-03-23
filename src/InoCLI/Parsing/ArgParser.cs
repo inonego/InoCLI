@@ -13,6 +13,13 @@ namespace InoCLI
    public class ArgParser
    {
 
+   #region Fields
+
+      private string stdinCache = null;
+      private bool   stdinRead  = false;
+
+   #endregion
+
    #region Parse
 
       // ------------------------------------------------------------
@@ -24,6 +31,13 @@ namespace InoCLI
       {
          var result = new ParsedArgs();
 
+         // Pre-read stdin if redirected
+         if (Console.IsInputRedirected)
+         {
+            stdinCache = Console.In.ReadToEnd().Trim();
+            stdinRead  = true;
+         }
+
          for (int i = 0; i < args.Length; i++)
          {
             string arg = args[i];
@@ -34,7 +48,7 @@ namespace InoCLI
             }
             else
             {
-               var positional = ResolvePositional(arg);
+               var positional = ResolveValue(arg);
 
                result.Positionals.Add(positional);
             }
@@ -57,12 +71,28 @@ namespace InoCLI
          if (arg.StartsWith("--"))
          {
             key = arg.Substring(2);
+
+            if (string.IsNullOrEmpty(key))
+            {
+               key = null;
+
+               throw new ArgumentException("Invalid option: '--' (empty key)");
+            }
+
             return true;
          }
 
-         if (arg.StartsWith("-") && arg.Length > 1 && !char.IsDigit(arg[1]))
+         if (arg.StartsWith("-"))
          {
             key = arg.Substring(1);
+
+            if (string.IsNullOrEmpty(key) || char.IsDigit(key[0]))
+            {
+               key = null;
+
+               return false;
+            }
+
             return true;
          }
 
@@ -78,34 +108,27 @@ namespace InoCLI
       // -------------------------------------------------------------------
       private void ParseOptionalValue(Dictionary<string, List<string>> optionals, string key, string[] args, ref int i)
       {
-         if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+         if (!optionals.ContainsKey(key))
          {
-            if (!optionals.ContainsKey(key))
-            {
-               optionals[key] = new List<string>();
-            }
-
-            optionals[key].Add(args[++i]);
+            optionals[key] = new List<string>();
          }
-         else
+
+         if (i + 1 < args.Length && !TryParseOptional(args[i + 1], out _))
          {
-            if (!optionals.ContainsKey(key))
-            {
-               optionals[key] = new List<string>();
-            }
+            optionals[key].Add(ResolveValue(args[++i]));
          }
       }
 
       // ------------------------------------------------------------
       /// <summary>
-      /// Resolves a positional value. Substitutes "-" with stdin.
+      /// Resolves a value. Substitutes "-" with cached stdin.
       /// </summary>
       // ------------------------------------------------------------
-      private string ResolvePositional(string arg)
+      private string ResolveValue(string arg)
       {
-         if (arg == "-" && Console.IsInputRedirected)
+         if (arg == "-" && stdinRead)
          {
-            return Console.In.ReadToEnd().Trim();
+            return stdinCache;
          }
 
          return arg;
