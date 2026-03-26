@@ -24,12 +24,12 @@ namespace InoCLI
 
       // ------------------------------------------------------------
       /// <summary>
-      /// Parses the argument array into a ParsedArgs object.
+      /// Parses the argument array into a CommandArgs object.
       /// </summary>
       // ------------------------------------------------------------
-      public ParsedArgs Parse(string[] args)
+      public CommandArgs Parse(string[] args)
       {
-         var result = new ParsedArgs();
+         var result = new CommandArgs();
 
          // Pre-read stdin if redirected
          if (Console.IsInputRedirected)

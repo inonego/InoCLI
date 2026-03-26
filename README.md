@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">InoCLI</h1>
   <p align="center">
-    .NET CLI Argument Parser
+    .NET CLI Framework — Parser + Command Registry
   </p>
   <p align="center">
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
@@ -14,14 +14,22 @@
 
 ---
 
-Lightweight CLI argument parser for .NET. Splits `string[] args` into **positionals** and **optionals** — nothing more.
+Lightweight CLI framework for .NET. Argument parser + attribute-based command registry.
 
 ## Structure
 
 ```
 InoCLI/
-├── src/             ArgParser, ParsedArgs
-└── test/            TEST_ArgParser
+├── src/
+│   ├── ArgParser.cs              Argument parser
+│   ├── CommandArgs.cs            Parsed args with typed accessors
+│   ├── CLICommandAttribute.cs    [CLICommand] attribute
+│   ├── CommandInfo.cs            Command metadata
+│   ├── CommandScanner.cs         Reflection-based discovery
+│   └── CommandRegistry.cs        Scan + resolve + help
+└── test/
+    ├── TEST_ArgParser.cs
+    └── TEST_CommandRegistry.cs
 ```
 
 ## Installation
@@ -32,61 +40,81 @@ git submodule add https://github.com/inonego/InoCLI.git lib/InoCLI
 
 ```xml
 <ItemGroup>
-  <ProjectReference Include="../lib/InoCLI/src/InoCLI/InoCLI.csproj" />
+  <ProjectReference Include="../lib/InoCLI/src/InoCLI.csproj" />
 </ItemGroup>
 ```
 
-## Usage
+## Argument Parsing
 
 ### Parse
 
 ```csharp
-var parsed = new ArgParser().Parse(args);
+var args = new ArgParser().Parse(args);
 // myapp build src/file.cs 42 --filter "x > 0" --tag a --tag b --full
 
-parsed.Positionals  // ["build", "src/file.cs", "42"]
-parsed.Optionals    // {"filter": ["x > 0"], "tag": ["a", "b"], "full": []}
+args.Positionals  // ["build", "src/file.cs", "42"]
+args.Optionals    // {"filter": ["x > 0"], "tag": ["a", "b"], "full": []}
 ```
 
 ### Indexer
 
 ```csharp
-parsed[0]              // "build"        (positional by index, null if out of range)
-parsed["filter"]       // "x > 0"        (optional first value, null if missing)
+args[0]              // "build"        (positional by index, null if out of range)
+args["filter"]       // "x > 0"        (optional first value, null if missing)
 ```
 
-### Has
+### Has / Flag
 
 ```csharp
-parsed.Has(0)          // true           (positional exists)
-parsed.Has("full")     // true           (flag exists)
-parsed.Has("missing")  // false
+args.Has(0)          // true           (positional exists)
+args.Has("full")     // true           (optional exists)
+args.Flag("full")    // true           (flag shorthand)
 ```
 
 ### Get (throws on missing/invalid)
 
 ```csharp
-parsed.GetInt(1)              // positional as int
-parsed.GetFloat(1)            // positional as float
-parsed.GetBool(1)             // positional as bool
+args.GetInt(1)              // positional as int
+args.GetLong(1)             // positional as long
+args.GetFloat(1)            // positional as float
+args.GetDouble(1)           // positional as double
+args.GetBool(1)             // positional as bool
 
-parsed.GetInt("retries")      // optional as int
-parsed.GetFloat("ratio")      // optional as float
-parsed.GetBool("verbose")     // optional as bool
+args.GetInt("retries")      // optional as int
+args.GetLong("offset")      // optional as long
+args.GetFloat("ratio")      // optional as float
+args.GetDouble("precision") // optional as double
+args.GetBool("verbose")     // optional as bool
+```
+
+### Get (fallback on missing/invalid)
+
+```csharp
+args.GetInt(1, 0)              // returns 0 if missing/invalid
+args.GetInt("retries", 3)      // returns 3 if missing/invalid
+args.Get("name", "default")    // string fallback
 ```
 
 ### All (multiple values)
 
 ```csharp
-parsed.All("tag")          // ["a", "b"]       (List<string>)
-parsed.AllInt("port")      // [8080, 9090]     (List<int>)
-parsed.AllFloat("ratio")   // [1.0, 2.5]       (List<float>)
-parsed.AllBool("flag")     // [true, false]    (List<bool>)
+args.All("tag")          // ["a", "b"]       (List<string>)
+args.AllInt("port")      // [8080, 9090]     (List<int>)
+args.AllLong("id")       // [...]            (List<long>)
+args.AllFloat("ratio")   // [1.0, 2.5]       (List<float>)
+args.AllDouble("coord")  // [...]            (List<double>)
+args.AllBool("flag")     // [true, false]    (List<bool>)
+```
+
+### From
+
+```csharp
+args.From(2)           // ["42"]  — positionals from index onward
 ```
 
 ### Stdin
 
-`-` is replaced with piped stdin content (POSIX convention). Works for both positionals and optional values.
+`-` is replaced with piped stdin content (POSIX convention).
 
 ```bash
 cat input.txt | myapp deploy -              # positional stdin
@@ -95,16 +123,59 @@ cat input.txt | myapp deploy --code -       # optional stdin
 
 ### Option Formats
 
-Both `-short` and `--long` formats are supported.
+Both `-short` and `--long` formats are supported. `-42` (negative number) is treated as a positional.
 
 ```bash
 myapp -r 3             # short option with value
 myapp --retries 3      # long option with value
 myapp --full           # flag (no value)
-myapp -f               # short flag
 ```
 
-`-42` (negative number) is treated as a positional, not an option.
+## Command Registry
+
+### Define Commands
+
+```csharp
+public static class MyCommands
+{
+   [CLICommand("status", description = "Show status")]
+   public static string HandleStatus(CommandArgs args)
+   {
+      return "ok";
+   }
+
+   [CLICommand("run", "fast", description = "Run fast mode")]
+   public static string HandleRunFast(CommandArgs args)
+   {
+      return "fast:" + args[0];
+   }
+}
+```
+
+### Scan + Resolve
+
+```csharp
+var registry = new CommandRegistry();
+registry.Initialize(typeof(MyCommands).Assembly);
+
+var args = new ArgParser().Parse(new[] { "run", "fast", "input.txt", "--verbose" });
+var (info, resolved) = registry.Resolve(args);
+
+// info.Key         → "run.fast"
+// info.Description → "Run fast mode"
+// resolved[0]      → "input.txt"       (path stripped)
+// resolved.Flag("verbose") → true
+
+var result = info.Method.Invoke(null, new object[] { resolved });
+```
+
+### Help
+
+```csharp
+registry.GetHelp();            // all commands
+registry.GetHelp("run");       // commands under "run.*"
+registry.GetRoots();           // ["status", "run"]
+```
 
 ## Compatibility
 
