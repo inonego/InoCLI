@@ -1,0 +1,10 @@
+[package]
+name = "inocli"
+version = "0.1.0"
+edition = "2024"
+description = "CLI argument parser and command router"
+license = "MIT"
+
+[dependencies]
+
+[dev-dependencies]
